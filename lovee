@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>To 恩：</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #1a1a1a;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Microsoft YaHei', '微软雅黑', 'PingFang SC', sans-serif;
+            touch-action: none; /* 禁止触摸滚动 */
+        }
+        /* 提示信息 */
+        #info {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+            pointer-events: none;
+            z-index: 9999;
+        }
+        /* 祝福窗口卡片 */
+        .love-window {
+            position: absolute;
+            width: 180px;
+            min-height: 60px;
+            padding: 12px 6px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 0 2px rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255,255,255,0.5);
+            animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            word-break: break-word;
+            line-height: 1.4;
+            letter-spacing: 1px;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.2); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        /* 手机小屏幕适配 */
+        @media (max-width: 600px) {
+            .love-window {
+                width: 140px;
+                font-size: 18px;
+                padding: 10px 4px;
+            }
+        }
+        /* 极窄屏幕再小一点 */
+        @media (max-width: 380px) {
+            .love-window {
+                width: 120px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="info">✨ 正在派送心意... ✨</div>
+
+<script>
+    (function(){
+        // ---------- 🎨 配置参数（完全对应你的 Python 版） ----------
+        const CONFIG = {
+            WINDOW_WIDTH: 180,          // 默认宽度（px），手机会根据媒体查询调整
+            WINDOW_HEIGHT: 70,
+            NUM_WINDOWS: 100,           // 窗口数量
+            POP_DELAY: 50,              // 弹出间隔（毫秒），略慢于 Python 版但体验更自然
+            AUTO_CLEAR_DELAY: 500,      // 全部生成完毕后，等待 0.5 秒自动清除所有窗口
+        };
+
+        // 祝福语词库（来自你的 TIPS）
+        const TIPS = [
+            '我爱你',
+            '✧⁺⸜(●˙▾˙●)⸝⁺✧',
+            '喜欢你',
+            '没有不喜欢',
+            '宝宝'
+        ];
+
+        // 背景色（红色系，来自你的 BG_COLORS）
+        const BG_COLORS = [
+            'red',
+            'firebrick',
+            'pink',
+            'hotpink',
+            'mistyrose'
+        ];
+
+        // ---------- 全局状态 ----------
+        let stop = false;                // 是否已触发停止（保留，但本版不用于手动触发）
+        let windowCount = 0;
+        let timer = null;
+        let autoClearTimer = null;       // 自动清除定时器
+        const body = document.body;
+        const windowsList = [];           // 存储所有生成的窗口元素
+
+        // ---------- 辅助函数：生成随机整数 ----------
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        // ---------- 创建一个祝福窗口 ----------
+        function createLoveWindow() {
+            if (stop) return;
+
+            // 获取当前视口宽高
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
+
+            // 根据媒体查询，实际显示的窗口宽度可能与 CONFIG.WINDOW_WIDTH 不同，
+            // 但我们以当前实际计算为准：获取第一个已生成的窗口的宽度（如果有），否则使用配置宽度
+            let actualWidth = CONFIG.WINDOW_WIDTH;
+            if (windowsList.length > 0) {
+                actualWidth = windowsList[0].offsetWidth || CONFIG.WINDOW_WIDTH;
+            } else {
+                // 没有窗口时，根据屏幕宽度粗略判断手机还是桌面
+                if (screenW <= 600) actualWidth = 140;
+                else if (screenW <= 380) actualWidth = 120;
+            }
+            const actualHeight = CONFIG.WINDOW_HEIGHT;  // 高度变化不大
+
+            const maxX = Math.max(0, screenW - actualWidth);
+            const maxY = Math.max(0, screenH - actualHeight);
+         
